@@ -24,9 +24,16 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
     }
 
     override func viewWillAppear(animated: Bool) {
-        // Hide the stop button
+        super.viewWillAppear(animated)
+
         stopButton.hidden = true
         recordButton.enabled = true
+        recordingInProgress.text = "Tap to record"
+    }
+
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        recordingInProgress.text = ""
     }
 
     override func didReceiveMemoryWarning() {
@@ -35,17 +42,15 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
     }
 
     @IBAction func recordAudio(sender: UIButton) {
-        recordingInProgress.hidden = false
         stopButton.hidden = false
         recordButton.enabled = false
+        recordingInProgress.text = "Recording..."
 
-        //TODO: record the user's voice
         let dirPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
 
         let recordingName = "my_audio.wav"
         var pathArray = [dirPath, recordingName]
         let filePath = NSURL.fileURLWithPathComponents(pathArray)
-        println(filePath)
 
         // Setup audio session
         var session = AVAudioSession.sharedInstance()
@@ -61,13 +66,10 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
 
     func audioRecorderDidFinishRecording(recorder: AVAudioRecorder!, successfully flag: Bool) {
         if (flag) {
-            recordedAudio = RecordedAudio()
-            recordedAudio.fileURL = recorder.url
-            recordedAudio.title = recorder.url.lastPathComponent
-
-            self.performSegueWithIdentifier("stopRecording", sender: recordedAudio)
+            recordedAudio = RecordedAudio(fileURL: recorder.url, title: recorder.url.lastPathComponent!)
+            performSegueWithIdentifier("stopRecording", sender: recordedAudio)
         } else {
-            println("Recording was not successful")
+            errorAlert()
             recordButton.enabled = true
             stopButton.hidden = true
         }
@@ -81,10 +83,17 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
         }
     }
 
-    @IBAction func stopAudio(sender: UIButton) {
-        recordingInProgress.hidden = true
+    func errorAlert() {
+        let alertController = UIAlertController(title: nil, message: "Recording was not successful", preferredStyle: UIAlertControllerStyle.Alert)
+        let okButton = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
+        alertController.addAction(okButton)
 
+        presentViewController(alertController, animated: true, completion: nil)
+    }
+
+    @IBAction func stopAudio(sender: UIButton) {
         audioRecorder.stop()
+        audioRecorder.pause()
         var audioSession = AVAudioSession.sharedInstance()
         audioSession.setActive(false, error: nil)
     }

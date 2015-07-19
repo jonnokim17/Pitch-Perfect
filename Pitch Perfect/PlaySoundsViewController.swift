@@ -19,12 +19,6 @@ class PlaySoundsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-//        if var filePath = NSBundle.mainBundle().pathForResource("movie_quote", ofType: "mp3") {
-//            var filePathURL = NSURL.fileURLWithPath(filePath)
-//        } else {
-//            println("the filepath is empty")
-//        }
 
         audioPlayer = AVAudioPlayer(contentsOfURL: receivedAudio.fileURL, error: nil)
         audioPlayer.enableRate = true
@@ -54,21 +48,23 @@ class PlaySoundsViewController: UIViewController {
         playAudioWithVariablePitch(-1000)
     }
 
+    @IBAction func playCathedralAudio(sender: UIButton) {
+        playAudioWithReverbEffect(.Cathedral, mix: 50)
+    }
+
     @IBAction func stopAudio(sender: UIButton) {
-        audioPlayer.stop()
+        stopAndResetAudio()
     }
 
     func playAudioWithRate(rate: Float) {
-        audioPlayer.stop()
+        stopAndResetAudio()
         audioPlayer.rate = rate
         audioPlayer.currentTime = 0.0
         audioPlayer.play()
     }
 
     func playAudioWithVariablePitch(pitch: Float) {
-        audioPlayer.stop()
-        audioEngine.stop()
-        audioEngine.reset()
+        stopAndResetAudio()
 
         var audioPlayerNode = AVAudioPlayerNode()
         audioEngine.attachNode(audioPlayerNode)
@@ -85,14 +81,29 @@ class PlaySoundsViewController: UIViewController {
 
         audioPlayerNode.play()
     }
-    /*
-    // MARK: - Navigation
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    func playAudioWithReverbEffect(preset: AVAudioUnitReverbPreset, mix: Float) {
+        stopAndResetAudio()
+        var audioPlayerNode = AVAudioPlayerNode()
+        audioEngine.attachNode(audioPlayerNode)
+
+        var addReverbEffect = AVAudioUnitReverb()
+        addReverbEffect.loadFactoryPreset(preset)
+        addReverbEffect.wetDryMix = mix
+        audioEngine.attachNode(addReverbEffect)
+
+        audioEngine.connect(audioPlayerNode, to: addReverbEffect, format: nil)
+        audioEngine.connect(addReverbEffect, to: audioEngine.outputNode, format: nil)
+
+        audioPlayerNode.scheduleFile(audioFile, atTime: nil, completionHandler: nil)
+        audioEngine.startAndReturnError(nil)
+
+        audioPlayerNode.play()
     }
-    */
 
+    func stopAndResetAudio() {
+        audioPlayer.stop()
+        audioEngine.stop()
+        audioEngine.reset()
+    }
 }
