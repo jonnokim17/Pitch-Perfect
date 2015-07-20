@@ -93,7 +93,6 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
 
     @IBAction func stopAudio(sender: UIButton) {
         audioRecorder.stop()
-        audioRecorder.pause()
         var audioSession = AVAudioSession.sharedInstance()
         audioSession.setActive(false, error: nil)
     }
